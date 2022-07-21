@@ -1,0 +1,32 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_BuscarAutoridadCedula]    Script Date: 7/21/2022 9:40:01 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 14/07/2022
+-- Description:	Buscar datos de una autoridad por cedula
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_BuscarAutoridadCedula] --5, 123, 456
+	@CedulaProvincia as varchar(4),
+	@CedulaTomo as varchar(10),
+	@CedulaAsiento as varchar(10)
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+	  SELECT IdAutoridad, Nombre, Apellido, CedulaProvincia, CedulaTomo, CedulaAsiento, IdProvincia, IdDistrito, IdCorregimiento, CodArea, CodEntidad, CodDependencia, BuzonCorreo,
+	  Telefono, Celular, Estado, ISNULL(UsuarioRegistra,'') AS UsuarioRegistra, ISNULL(UsuarioModifica,'') AS UsuarioModifica,
+	  ISNULL(convert(varchar(10),FechaModifica, 103), '') + Substring(convert(varchar, FechaModifica, 22),9,13)  AS FechaModifica, 
+	  --ISNULL(Email,'') AS Email, ISNULL(Telefono,'') AS Telefono, ISNULL(Celular,'') AS Celular,
+	  ISNULL(convert(varchar(10),FechaRegistro, 103), '') + Substring(convert(varchar, FechaRegistro, 22),9,13)  AS FechaRegistra 
+	  FROM [BD_RendicionCuenta].[dbo].[CSGOL_TF_AUTORIDADES]
+	  WHERE CedulaProvincia = @CedulaProvincia
+	  AND CedulaTomo = @CedulaTomo
+	  AND CedulaAsiento = @CedulaAsiento
+
+END

@@ -1,0 +1,51 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_BuscarAutoridadBY_ID]    Script Date: 7/21/2022 9:39:24 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 12/07/2022
+-- Description:	Mostrar datos de autoridades
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_BuscarAutoridadBY_ID] --1
+	@IdAutoridad as int
+AS
+BEGIN
+
+
+	DECLARE @DateFormat varchar(20)
+	SET @DateFormat = 'dd/MM/yyyy hh:mm tt'
+
+
+	SET NOCOUNT ON;
+	    
+	  SELECT
+	  [IdAutoridad]
+      ,[Nombre]
+      ,[Apellido]
+	  ,[IdCodProvincia]
+	  ,[IdSiglas]
+      ,[CedulaProvincia]
+      ,[CedulaTomo]
+      ,[CedulaAsiento]
+	  ,[CodArea]
+	  ,[CodEntidad]
+	  ,[CodDependencia]
+      ,[IdProvincia]
+      ,[IdDistrito]
+	  ,[IdCorregimiento]
+	  ,[BuzonCorreo]
+      ,[Telefono]
+      ,[Celular]
+      ,[Estado]
+      ,ISNULL(UsuarioRegistra,'') AS UsuarioRegistra
+	  ,ISNULL(FORMAT(FechaRegistro, @DateFormat),'') AS FechaRegistro 
+	  ,ISNULL(UsuarioModifica,'') AS UsuarioModifica
+	  ,ISNULL(FORMAT(FechaModifica, @DateFormat),'') AS FechaModifica 
+	  
+	  FROM CSGOL_TF_AUTORIDADES
+	  WHERE IdAutoridad = @IdAutoridad
+END

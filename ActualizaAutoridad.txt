@@ -1,0 +1,67 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_U_CSGOL_UPDATE_AUTORIDAD]    Script Date: 7/21/2022 9:41:38 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 14/07/2022
+-- Description:	Modificar datos de la auoridad por cédula
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_U_CSGOL_UPDATE_AUTORIDAD] --65,'Maria','Iglesias','4','223','4558','5','58','02',4,1,1,'julio@gmail.com','','1232-4521','99146', 'A'
+	@IdAutoridad int,
+	@Nombre varchar(100),
+	@Apellido varchar(100),
+	@IdCodProvincia int,
+	@IdSiglas int,
+	@CedulaProvincia varchar(4),
+	@CedulaTomo varchar(10),
+	@CedulaAsiento varchar(10),
+	@CodArea char(1),
+	@CodEntidad char(2),
+	@CodDependencia varchar(3),
+	@IdProvincia int,
+	@IdDistrito int,
+	@IdCorregimiento int,
+	@BuzonCorreo varchar(200),
+	@Telefono varchar(15),
+	@Celular varchar(15),
+	@Estado char(1),
+	@UsuarioModifica varchar(128)
+	--@IdRegistro as int
+	
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+   UPDATE CSGOL_TF_AUTORIDADES SET
+
+   Nombre = @Nombre,
+   Apellido = @Apellido,
+   IdCodProvincia = @IdCodProvincia,
+   IdSiglas = @IdSiglas,
+   CedulaProvincia = @CedulaProvincia,
+   CedulaTomo = @CedulaTomo,
+   CedulaAsiento = @CedulaAsiento,
+   CodArea = @CodArea,
+   CodEntidad = @CodEntidad,
+   CodDependencia = @CodDependencia,
+   IdProvincia = @IdProvincia,
+   IdDistrito = @IdDistrito,
+   IdCorregimiento = @IdCorregimiento,
+   BuzonCorreo = @BuzonCorreo,
+   Telefono = @Telefono,
+   Celular = @Celular,
+   Estado = @Estado,
+   UsuarioModifica = @UsuarioModifica,
+   FechaModifica = SYSDATETIME()
+   --Valid = @Estado,
+   
+   WHERE [IdAutoridad] = @IdAutoridad
+	
+	Select 'OK' as Respuesta
+
+END

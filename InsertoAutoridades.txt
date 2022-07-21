@@ -1,0 +1,107 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_I_CSGOL_GuardarAutoridad]    Script Date: 7/21/2022 9:38:44 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 14/07/2022
+-- Description:	Registrar Autoridad
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_I_CSGOL_GuardarAutoridad] --'Maria','Iglesias','2','223','4558','5','2',4,2,3,'julio@gmail.com','','1232-4521','Laura Sofia','A'
+	@Nombre varchar(100),
+	@Apellido varchar(100),
+	@IdCodProvincia int,
+	@IdSiglas int,
+	@CedulaProvincia varchar(4),
+	@CedulaTomo varchar(10),
+	@CedulaAsiento varchar(10),
+	@CodArea char(1),
+	@CodEntidad char(2),
+	@CodDependencia varchar(3),
+	@IdProvincia int,
+	@IdDistrito int,
+	@IdCorregimiento int,
+	@BuzonCorreo varchar(200),
+	@Telefono varchar(15),
+	@Celular varchar(15),
+	@IdUserRegistra varchar(128),
+
+	----------Parametros Manuales---------------
+
+	@Estado char(1)
+	--@EstadoConfirmacion varchar (10) = 'NEW'
+	
+AS
+
+BEGIN TRY
+	declare @Resultado as int
+	set @Resultado = (SELECT count(IdAutoridad) FROM [CSGOL_TF_AUTORIDADES] WHERE CedulaProvincia=@CedulaProvincia AND CedulaTomo=@CedulaTomo AND CedulaAsiento=@CedulaAsiento)
+
+	IF @Resultado = 0
+	
+	BEGIN
+
+		BEGIN TRANSACTION	 
+
+			Insert into [dbo].[CSGOL_TF_AUTORIDADES](
+			
+			[Nombre]
+			,[Apellido]
+			,[IdCodProvincia]
+			,[IdSiglas]
+			,[CedulaProvincia]
+			,[CedulaTomo]
+			,[CedulaAsiento]
+			,[CodArea]
+			,[CodEntidad]
+			,[CodDependencia]
+			,[IdProvincia]
+			,[IdDistrito]
+			,[IdCorregimiento]
+			,[BuzonCorreo]
+			,[Telefono]
+			,[Celular]
+			--,[Valid] esta columna se esta Utilizando para validar el estado
+			,[Estado]
+			,[UsuarioRegistra]
+			,[FechaRegistro]
+						
+			)
+			Values(
+					@Nombre,
+					@Apellido,
+					@IdCodProvincia,
+					@IdSiglas,
+					@CedulaProvincia,
+					@CedulaTomo,
+					@CedulaAsiento,
+					@CodArea,
+					@CodEntidad,
+					@CodDependencia,
+					@IdProvincia,
+					@IdDistrito,
+					@IdCorregimiento,
+					@BuzonCorreo,
+					@Telefono,
+					@Celular,
+					@Estado,
+					--@EstadoConfirmacion,
+					@IdUserRegistra,
+					SYSDATETIME()
+				  )
+
+		COMMIT TRANSACTION
+
+		select 'OK' as 'respuesta'
+	END
+	ELSE
+	 select 'Exist' as 'respuesta'
+END TRY
+BEGIN CATCH
+	BEGIN
+		Select 'NOOK' as 'respuesta'
+	END
+END CATCH

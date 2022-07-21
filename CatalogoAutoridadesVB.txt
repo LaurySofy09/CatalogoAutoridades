@@ -1,0 +1,807 @@
+Public Class CatalogoAdministrarVeedores
+    Inherits System.Web.UI.Page
+    Public notifyModal As String = ""
+    Dim ObjInterfacesJP As New InterfacesJP
+    Dim ObjInterzGeneral As New InterfazJF
+    Dim lws As New InterfazGeneral
+    Public RegistradorPor As String = ""
+    Public FechaRegistra As String = ""
+    Public ModificadoPor As String = ""
+    Public FechaModifica As String = ""
+    Dim dtMensaje As New DataTable
+    Private _codigoError As Integer = 0
+    Dim ArregloRoles As New List(Of Integer)
+    Dim IdUser As String
+
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+
+        If Not (IsPostBack) Then
+
+            ConsultarVeedores()
+            CargarCatalogoOrganismos()
+            CargarCatalogoProvincias()
+            ddlDistrito.Enabled = False
+            ddlCorregimiento.Enabled = False
+            DivCarrera.Visible = False
+            ddlFacultades.Enabled = False
+            ddlCarreras.Enabled = False
+            DivEstado.Visible = False
+            DivRegistradoPor.Visible = False
+            DivModificadoPor.Visible = False
+            'ScriptManager.RegisterStartupScript(Page, Page.[GetType](), "BorrarStorage", "localStorage.removeItem('DataTables_ContentPlaceHolder1_GridVeedores_/forms/CatalogoAdministrarVeedores.aspx');", True)
+            'ScriptManager.RegisterStartupScript(Page, Page.[GetType](), "BorrarStorage", "localStorage.removeItem('DataTables_ContentPlaceHolder1_GridVeedores_/GobiernosLocales/forms/CatalogoAdministrarVeedores.aspx');", True)
+            'ScriptManager.RegisterStartupScript(Page, Page.[GetType](), "disp_confirm", "<script>disp_confirm()</script>", True)
+        End If
+
+
+    End Sub
+
+    Private Sub CargarValoresCampoCedula()
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarValoresProvinciaCampoCedula()
+
+        If dt.Rows.Count > 0 Then
+            ddlValProv.Items.Clear()
+
+            For Each row As DataRow In dt.Rows
+                ddlValProv.Items.Add(New ListItem(row("ValorProvincia"), row("IdProvincia")))
+            Next
+            ddlValProv.SelectedValue = 0
+
+        End If
+
+
+        dt = ObjInterfacesJP.ListarSiglasCampoCedula()
+
+        If dt.Rows.Count > 0 Then
+            ddlSiglas.Items.Clear()
+
+            For Each row As DataRow In dt.Rows
+                ddlSiglas.Items.Add(New ListItem(row("Siglas"), row("Id")))
+            Next
+            ddlSiglas.SelectedValue = 1
+
+        End If
+
+
+    End Sub
+
+
+    Private Sub ObtenerRolesUsuario()
+
+        Try
+            IdUser = Session("IdentificadorUsuario")
+
+            Dim RolesUser As String = ""
+
+            Dim dtRoles As DataTable = ObjInterzGeneral.GetPersonalData(Session("IdentificadorUsuario"))
+            If dtRoles.Rows.Count > 0 Then
+
+                For Each dr As DataRow In dtRoles.Rows()
+                    ArregloRoles.Add(dr.Item("CodigoRol"))
+                Next
+                'lblRolesUsuario.Value = ArregloRoles.ToArray().ToString
+
+            End If
+        Catch ex As Exception
+            '' Obtiene datos del Error y registra
+            Dim mensaje As String = ex.Message.ToString()
+            Dim detalle As String = DirectCast(ex, System.Exception).StackTrace.ToString()
+            _codigoError = lws.RegistrarError("Catalogo Administrar Veedores Page Load, carga de roles", mensaje, detalle)
+
+            Funciones.ModalErrorCodeBehind("Error al realizar la consulta - Catalogo Administrar Veedores Page Load, carga de roles", _codigoError)
+        End Try
+    End Sub
+
+    Private Sub CondicionesCampoCedula()
+
+        'CAMPO PROVINCIA
+        Dim dtProvincia As DataTable = ObjInterfacesJP.ParametrosCampoCedula(54) 'Provincia
+        If dtProvincia.Rows.Count > 0 Then
+            'Asignar la cantidad de caracteres permitido al campo
+            'txtProv.Attributes.Add("MaxLength", dtProvincia.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtProvincia.Rows(0).Item("ValueString") = 0 Then
+                'txtProv.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtProvincia.Rows(0).Item("ValueString") = 1
+                'txtProv.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Provincia es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Provincia de la cédula")
+        End If
+
+
+        'CAMPO TOMO
+        Dim dtTomo As DataTable = ObjInterfacesJP.ParametrosCampoCedula(55) 'Tomo
+        If dtTomo.Rows.Count > 0 Then
+            txtTomo.Attributes.Add("MaxLength", dtTomo.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtTomo.Rows(0).Item("ValueString") = 0 Then
+                txtTomo.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtTomo.Rows(0).Item("ValueString") = 1
+                txtTomo.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Provincia es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Tomo de la cédula")
+        End If
+
+
+        'CAMPO ASIENTO
+        Dim dtAsiento As DataTable = ObjInterfacesJP.ParametrosCampoCedula(57) 'Asiento
+        If dtAsiento.Rows.Count > 0 Then
+            txtAsiento.Attributes.Add("MaxLength", dtAsiento.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtAsiento.Rows(0).Item("ValueString") = 0 Then
+                txtAsiento.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtAsiento.Rows(0).Item("ValueString") = 1
+                txtAsiento.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Asiento es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Asiento de la cédula")
+        End If
+
+    End Sub
+
+
+    Private Sub CargarCatalogoOrganismos()
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarOrganismos()
+
+        ''limpiar Dropdown
+        ddlOrganismos.Items.Clear()
+
+        ddlOrganismos.Items.Add(New ListItem("-- Seleccione --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlOrganismos.Items.Add(New ListItem(row("Nombre"), row("IdOrganismo")))
+        Next
+
+        ddlFacultades.Items.Add(New ListItem("-- Seleccione--", -1))
+
+    End Sub
+
+    Private Sub CargarCatalogoProvincias()
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarProvincias()
+
+        ''limpiar Dropdown
+        ddlProvincias.Items.Clear()
+
+        ddlProvincias.Items.Add(New ListItem("-- Seleccione Provincia --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlProvincias.Items.Add(New ListItem(row("Descripcion"), row("IdProvincia")))
+        Next
+        ddlDistrito.Items.Add(New ListItem("-- Seleccione Distrito --", -1))
+    End Sub
+
+    Private Sub CargarCatalogoDistritos(ByVal CodProvincia As String)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarDistritos(CodProvincia)
+
+        ''limpiar Dropdown
+        ddlDistrito.Items.Clear()
+
+        ddlDistrito.Items.Add(New ListItem("-- Seleccione Distrito --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlDistrito.Items.Add(New ListItem(row("descripcion"), row("iddistrito")))
+        Next
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+        ddlDistrito.Enabled = True
+
+    End Sub
+
+    Private Sub CargarCatalogoCorregimientos(ByVal IdDistrito As Integer)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarCorregimientos(IdDistrito)
+
+        ''limpiar Dropdown
+        ddlCorregimiento.Items.Clear()
+
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlCorregimiento.Items.Add(New ListItem(row("descripcion"), row("idcorreg")))
+        Next
+        ddlCorregimiento.Enabled = True
+
+    End Sub
+
+    Private Sub ddlProvincias_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlProvincias.SelectedIndexChanged
+        If FlagAccion.Value = "Nuevo" Then
+            CargarCatalogoDistritos(ddlProvincias.SelectedValue)
+        Else
+            Dim dtProyectosVeedor As New DataTable
+            dtProyectosVeedor = ObjInterfacesJP.BuscarProyectoActivosProvinciaVeedorBY_ID(TxtIdentificador.Text)
+
+            Dim ArregloProyectos As New List(Of String)
+            Dim Proyectos As String = ""
+
+            If (dtProyectosVeedor.Rows.Count > 0) Then
+
+                For Each row In dtProyectosVeedor.Rows
+
+                    If row.Item("IdProvincia") = ProvinciaActual.Text Then
+                        ArregloProyectos.Add(row.Item("Secuencial"))
+                        Proyectos = String.Join(",", ArregloProyectos.ToArray())
+                    End If
+
+                Next
+
+                dtMensaje = ObjInterfacesJP.ConsultarMensaje("VAEP", Proyectos)
+                Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+
+                ddlProvincias.SelectedValue = ProvinciaActual.Text
+                ddlProvincias.Enabled = False
+            Else
+                CargarCatalogoDistritos(ddlProvincias.SelectedValue)
+            End If
+        End If
+
+
+    End Sub
+
+    Private Sub ddlDistrito_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlDistrito.SelectedIndexChanged
+        CargarCatalogoCorregimientos(ddlDistrito.SelectedValue)
+    End Sub
+
+    Private Sub ddlOrganismos_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlOrganismos.SelectedIndexChanged
+        BuscarDatosOrganismo(ddlOrganismos.SelectedValue)
+    End Sub
+
+    Private Sub BuscarDatosOrganismo(ByVal IdOrganismo As Integer)
+
+        Dim dt As New DataTable
+
+        dt = ObjInterfacesJP.BuscarOrganismo(IdOrganismo)
+
+        If dt.Rows.Count > 0 Then
+
+            If (dt.Rows(0).Item("Tipo") = "U") Then
+                DivFacultad.Visible = True
+                DivCarrera.Visible = True
+                CargarCatalogoFacultades(IdOrganismo)
+            Else
+                DivFacultad.Visible = False
+                DivCarrera.Visible = False
+            End If
+
+        End If
+
+    End Sub
+
+
+    Private Sub CargarCatalogoFacultades(ByVal IdOrganismo As Integer)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarFacultades(IdOrganismo)
+
+        ''limpiar Dropdown
+        ddlFacultades.Items.Clear()
+
+        ddlFacultades.Items.Add(New ListItem("-- Seleccione una Facultad --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlFacultades.Items.Add(New ListItem(row("Nombre"), row("IdFacultad")))
+        Next
+        ddlFacultades.Enabled = True
+        ddlCarreras.Items.Add(New ListItem("-- Seleccione una Carrera --", -1))
+
+    End Sub
+
+    Private Sub ddlFacultades_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlFacultades.SelectedIndexChanged
+        CargarCatalogoCarreras(ddlOrganismos.SelectedValue, ddlFacultades.SelectedValue)
+    End Sub
+
+    Private Sub CargarCatalogoCarreras(ByVal IdOrganismo As Integer, ByVal IdFacultad As Integer)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarCarreras(IdOrganismo, IdFacultad)
+
+        ''limpiar Dropdown
+        ddlCarreras.Items.Clear()
+
+        ddlCarreras.Items.Add(New ListItem("-- Seleccione una Carrera --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlCarreras.Items.Add(New ListItem(row("Nombre"), row("IdCarrera")))
+        Next
+        ddlCarreras.Enabled = True
+
+
+    End Sub
+
+
+    Private Sub ConsultarVeedores()
+
+        'ObtenerRolesUsuario()
+        IdUser = Session("IdentificadorUsuario")
+
+        Dim dtVeedores As New DataTable
+        dtVeedores = ObjInterfacesJP.ListarVeedores(IdUser)
+        'Dim Roles As String = String.Join(",", ArregloRoles.ToArray())
+        'Dim lbA As Boolean = Roles.Contains("3") 'Rol de Fiscalizador
+
+        'If lbA Then
+        '    dtVeedores = ObjInterfacesJP.ListarVeedores(1, IdUser)
+        'Else
+        '    dtVeedores = ObjInterfacesJP.ListarVeedores(0, IdUser)
+        'End If
+
+        GridVeedores.DataSource = Nothing
+        GridVeedores.DataBind()
+
+        If dtVeedores.Rows.Count > 0 Then
+            btnNuevo.Visible = True
+
+            GridVeedores.DataSource = dtVeedores
+            GridVeedores.DataBind()
+
+            If EditUser.Value = "SI" Then
+                GridVeedores.Rows(IndiceRegistroEditado.Text).BackColor = Drawing.Color.AliceBlue
+            End If
+
+        Else
+            btnNuevo.Visible = True
+        End If
+
+
+    End Sub
+
+    Private Sub btnNuevo_ServerClick(sender As Object, e As EventArgs) Handles btnNuevo.ServerClick
+
+
+        txtNombre.Text = ""
+        txtNombre.ToolTip = ("")
+        txtNombre.CssClass = ("form-control")
+        '------------------------------------------------
+        txtApellido.Text = ""
+        txtApellido.ToolTip = ("")
+        txtApellido.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlValProv.SelectedIndex = "-1"
+        ddlSiglas.SelectedIndex = "-1"
+        txtTomo.Text = ""
+        txtAsiento.Text = ""
+        '------------------------------------------------
+        txtCorreo.Text = ""
+        txtCorreo.ToolTip = ("")
+        txtCorreo.CssClass = ("form-control")
+        '------------------------------------------------
+        txtTelefono.Text = ""
+        txtTelefono.ToolTip = ("")
+        txtTelefono.CssClass = ("form-control Phone-Number")
+        '------------------------------------------------
+        txtCelular.Text = ""
+        txtCelular.ToolTip = ("")
+        txtCelular.CssClass = ("form-control Phone-Number")
+        '------------------------------------------------
+        ddlOrganismos.SelectedIndex = "-1"
+        ddlOrganismos.ToolTip = ("")
+        ddlOrganismos.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlFacultades.SelectedIndex = "-1"
+        ddlFacultades.Enabled = False
+        ddlFacultades.ToolTip = ("")
+        ddlFacultades.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlCarreras.SelectedIndex = "-1"
+        ddlCarreras.ToolTip = ("")
+        ddlCarreras.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlProvincias.SelectedIndex = "-1"
+        ddlProvincias.ToolTip = ("")
+        ddlProvincias.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlDistrito.SelectedIndex = "-1"
+        ddlDistrito.Enabled = False
+        ddlDistrito.ToolTip = ("")
+        ddlDistrito.CssClass = ("form-control")
+        '------------------------------------------------
+        ddlCorregimiento.SelectedIndex = "-1"
+        ddlCorregimiento.Enabled = False
+        ddlCorregimiento.ToolTip = ("")
+        ddlCorregimiento.CssClass = ("form-control")
+        '------------------------------------------------
+
+        ddlEstados.SelectedIndex = "-1"
+        DivCarrera.Visible = False
+        DivEstado.Visible = False
+        DivRegistradoPor.Visible = False
+        DivModificadoPor.Visible = False
+        notifyModal = "$('#MdlRegistrarVeedor').modal('show');"
+        FlagAccion.Value = "Nuevo" 'Nuevo Registro
+
+        CondicionesCampoCedula()
+        CargarValoresCampoCedula()
+
+    End Sub
+
+
+    Private Sub CargarTooltips(ByVal dt As DataTable)
+
+        'Dim dtValoresModificados As DataTable = dt
+
+        If dt.Rows.Count > 0 Then
+
+            If (dt.Rows(0).Item("FlagModificaNombre") = 1) Then
+                txtNombre.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                txtNombre.CssClass = ("form-control bg-warning")
+                txtNombre.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaApellido") = 1) Then
+                txtApellido.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                txtApellido.CssClass = ("form-control bg-warning")
+                txtApellido.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdOrganismo") = 1) Then
+                ddlOrganismos.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlOrganismos.CssClass = ("form-control bg-warning")
+                ddlOrganismos.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdFacultad") = 1) Then
+                ddlFacultades.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlFacultades.CssClass = ("form-control bg-warning")
+                ddlFacultades.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdCarrera") = 1) Then
+                ddlCarreras.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlCarreras.CssClass = ("form-control bg-warning")
+                ddlCarreras.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdProvincia") = 1) Then
+                ddlProvincias.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlProvincias.CssClass = ("form-control bg-warning")
+                ddlProvincias.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdDistrito") = 1) Then
+                ddlDistrito.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlDistrito.CssClass = ("form-control bg-warning")
+                ddlDistrito.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaIdCorregimiento") = 1) Then
+                ddlCorregimiento.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                ddlCorregimiento.CssClass = ("form-control bg-warning")
+                ddlCorregimiento.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaEmail") = 1) Then
+                txtCorreo.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                txtCorreo.CssClass = ("form-control bg-warning")
+                txtCorreo.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaTelefono") = 1) Then
+                txtTelefono.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                txtTelefono.CssClass = ("form-control bg-warning")
+                txtTelefono.Enabled = False
+            End If
+
+            If (dt.Rows(0).Item("FlagModificaCelular") = 1) Then
+                txtCelular.ToolTip = ("Este campo fue modificado por este veedor, el " + dt.Rows(0).Item("FechaActualizaVeedor")) '("Este campo fue modificado por este veedor, el xx/xx/xx")
+                txtCelular.CssClass = ("form-control bg-warning")
+                txtCelular.Enabled = False
+            End If
+
+
+        End If
+
+
+
+    End Sub
+
+    Private Sub GridVeedores_RowCommand(sender As Object, e As GridViewCommandEventArgs) Handles GridVeedores.RowCommand
+
+        Try
+            If e.CommandName = "Editar" Then
+                FlagAccion.Value = "Editar" 'Editar Registro
+
+                Dim IdRegistro As Integer = e.CommandArgument
+
+                Dim gvr As GridViewRow = CType((CType(e.CommandSource, LinkButton)).NamingContainer, GridViewRow)
+
+                Dim dt As New DataTable
+                Dim data As New DataTable
+                Dim CodigoSistema As New Integer
+
+                dt = ObjInterfacesJP.BuscarVeedorID(IdRegistro)
+                If dt.Rows.Count > 0 Then
+
+                    CargarValoresCampoCedula()
+                    CargarTooltips(dt)
+
+                    IndiceRegistroEditado.Text = gvr.RowIndex
+
+                    TxtIdentificador.Text = dt.Rows(0).Item("Id")
+                    txtNombre.Text = dt.Rows(0).Item("Nombre")
+
+                    txtApellido.Text = dt.Rows(0).Item("ApellidoPaterno")
+                    'txtProv.Text = dt.Rows(0).Item("CodProvincia")
+
+
+                    If Not IsDBNull(dt.Rows(0).Item("IdCodProvincia") <> 0) Then
+                        ddlValProv.SelectedValue = dt.Rows(0).Item("IdCodProvincia")
+                    End If
+
+                    If Not IsDBNull(dt.Rows(0).Item("IdSigla") <> 1 And dt.Rows(0).Item("IdSigla") <> 0) Then
+                        ddlSiglas.SelectedValue = dt.Rows(0).Item("IdSigla")
+                    End If
+
+
+                    txtTomo.Text = dt.Rows(0).Item("CodTomo")
+                        txtAsiento.Text = dt.Rows(0).Item("CodAsiento")
+
+                        ddlOrganismos.SelectedValue = dt.Rows(0).Item("idOrganismo")
+
+                        If dt.Rows(0).Item("IdFacultad") <> "-1" Then
+                            CargarCatalogoFacultades(dt.Rows(0).Item("idOrganismo"))
+                            ddlFacultades.SelectedValue = dt.Rows(0).Item("IdFacultad")
+                            CargarCatalogoCarreras(dt.Rows(0).Item("idOrganismo"), dt.Rows(0).Item("IdFacultad"))
+                            ddlCarreras.Enabled = True
+                            DivCarrera.Visible = True
+
+                        End If
+
+                        If dt.Rows(0).Item("IdCarrera") <> "-1" Then
+                            ddlCarreras.SelectedValue = dt.Rows(0).Item("IdCarrera")
+                        End If
+
+                        ddlProvincias.Enabled = True
+                        ddlProvincias.SelectedValue = dt.Rows(0).Item("IdProvincia")
+                        ProvinciaActual.Text = ""
+                        ProvinciaActual.Text = dt.Rows(0).Item("IdProvincia")
+
+                        ddlDistrito.Enabled = True
+                        CargarCatalogoDistritos(dt.Rows(0).Item("IdProvincia"))
+                        ddlDistrito.SelectedValue = dt.Rows(0).Item("IdDistrito")
+
+                        ddlCorregimiento.Enabled = True
+                        CargarCatalogoCorregimientos(dt.Rows(0).Item("IdDistrito"))
+
+                        If dt.Rows(0).Item("IdCorreg") <> "-1" Then
+                            ddlCorregimiento.SelectedValue = dt.Rows(0).Item("IdCorreg")
+                        End If
+
+                        txtCorreo.Text = dt.Rows(0).Item("Email")
+                        txtTelefono.Text = PhoneFormater(dt.Rows(0).Item("Telefono"))
+                        txtCelular.Text = PhoneFormater(dt.Rows(0).Item("Celular"), 8)
+                        ddlEstados.Enabled = True
+                        ddlEstados.SelectedValue = dt.Rows(0).Item("Estado")
+                        DivEstado.Visible = True
+
+                        If dt.Rows(0).Item("UsuarioRegistra") = "" Then
+                            RegistradorPor = ""
+                            FechaRegistra = ""
+                            DivRegistradoPor.Visible = False
+                        Else
+                            DivRegistradoPor.Visible = True
+                            CodigoSistema = ObjInterfacesJP.CodigoSistema()
+                            data = ObjInterfacesJP.BuscarNombreUsuarios(dt.Rows(0).Item("UsuarioRegistra"), CodigoSistema)
+                            RegistradorPor = data.Rows(0).Item("Nombre_P") + " " + data.Rows(0).Item("Apellido_P") + " "
+                            FechaRegistra = dt.Rows(0).Item("FechaRegistra")
+                        End If
+
+                        If dt.Rows(0).Item("UsuarioModifica") = "" Then
+                            ModificadoPor = ""
+                            FechaModifica = ""
+                            DivModificadoPor.Visible = False
+                        Else
+                            DivModificadoPor.Visible = True
+                            data = ObjInterfacesJP.BuscarNombreUsuarios(dt.Rows(0).Item("UsuarioModifica"), CodigoSistema)
+                            ModificadoPor = data.Rows(0).Item("Nombre_P") + " " + data.Rows(0).Item("Apellido_P") + " "
+                            FechaModifica = dt.Rows(0).Item("FechaModifica")
+                        End If
+
+                        notifyModal = "$('#MdlRegistrarVeedor').modal('show');"
+
+                    Else
+                        'Dim dtMensaje As New DataTable
+                        dtMensaje = ObjInterfacesJP.ConsultarMensaje("EG1", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje")) '"No se encontró el registro"
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+    End Sub
+
+    Private Sub RegistrarVeedor()
+
+        Dim Prov As String = ""
+        Dim dt As New DataTable
+        Dim Identificador As String = Session("IdentificadorUsuario") 'ObjInterzGeneral.GetCookie("ssIdUser")
+
+        Dim Valprov = ddlValProv.SelectedValue
+        Dim Siglas = ddlSiglas.SelectedItem.Text
+
+
+        If (Valprov = 0 And Siglas <> "00") Then
+            Prov = Siglas
+        ElseIf (Siglas = "00" And Valprov <> 0) Then
+            Prov = Valprov
+        ElseIf (Siglas <> "00" And Valprov <> 0) Then
+            Prov = Valprov + Siglas
+        End If
+
+
+        If FlagAccion.Value = "Nuevo" Then
+
+            dt = ObjInterfacesJP.BuscarVeedorCedula(Prov, txtTomo.Text.Trim, txtAsiento.Text.Trim)
+            If dt.Rows.Count > 0 Then
+                dtMensaje = ObjInterfacesJP.ConsultarMensaje("REG7", "")
+                Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+            Else
+                Dim dtVeedor As New DataTable
+                dtVeedor = ObjInterfacesJP.Insertar_Veedor(txtNombre.Text.Trim, txtApellido.Text, ddlValProv.SelectedValue, ddlSiglas.SelectedValue, Prov, txtTomo.Text, txtAsiento.Text, ddlOrganismos.SelectedValue, ddlFacultades.SelectedValue, ddlCarreras.SelectedValue, ddlProvincias.SelectedValue, ddlDistrito.SelectedValue, ddlCorregimiento.SelectedValue, txtCorreo.Text, PhoneFormater(txtTelefono.Text), PhoneFormater(txtCelular.Text, 8), Identificador)
+                If dtVeedor.Rows(0).Item("respuesta") = "OK" Then
+                    EditUser.Value = "NO"
+
+                    ConsultarVeedores()
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("INEXT", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                ElseIf dtVeedor.Rows(0).Item("respuesta") = "Exist" Then
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("REG7", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                Else
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("INERR", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                End If
+
+            End If
+
+
+        Else
+            ActualizarDatosVeedor(ddlValProv.SelectedValue, ddlSiglas.SelectedValue, Prov, txtTomo.Text.Trim, txtAsiento.Text.Trim, txtNombre.Text.Trim, txtApellido.Text, ddlOrganismos.SelectedValue, ddlFacultades.SelectedValue, ddlCarreras.SelectedValue, ddlProvincias.SelectedValue, ddlDistrito.SelectedValue, ddlCorregimiento.SelectedValue, txtCorreo.Text, txtTelefono.Text, txtCelular.Text, Identificador, ddlEstados.SelectedValue.ToString, TxtIdentificador.Text)
+        End If
+
+
+    End Sub
+
+    Private Sub BtnGuardarVeedor_ServerClick(sender As Object, e As EventArgs) Handles BtnGuardarVeedor.ServerClick
+        RegistrarVeedor()
+    End Sub
+
+
+    Private Sub LimpiarCampos()
+        txtNombre.Text = ""
+        txtApellido.Text = ""
+        'txtProv.Text = ""
+        ddlValProv.SelectedValue = "0" 'nuevo
+        ddlSiglas.SelectedValue = "1" 'nuevo
+        txtTomo.Text = ""
+        txtAsiento.Text = ""
+        ddlOrganismos.SelectedValue = "-1"
+        ddlFacultades.SelectedValue = "-1"
+        ddlCarreras.SelectedValue = "-1"
+        ddlProvincias.SelectedValue = "-1"
+        ddlDistrito.SelectedValue = "-1"
+        ddlCorregimiento.SelectedValue = "-1"
+        txtCorreo.Text = ""
+        txtTelefono.Text = ""
+        txtCelular.Text = ""
+        ddlEstados.SelectedValue = "A"
+    End Sub
+
+    Private Sub ActualizarDatosVeedor(ByVal IdCodProv As String, ByVal IdSigla As String, ByVal codProv As String, ByVal Tomo As String, ByVal Asiento As String, ByVal Nombre As String, ByVal Apellido As String, ByVal IdOrganismo As String, ByVal IdFacultad As String, ByVal IdCarrera As String,
+                                      ByVal IdProvincia As String, ByVal IdDistrito As String, ByVal IdCorregimiento As String, ByVal Correo As String, ByVal Telefono As String, ByVal Celular As String, ByVal IdUsuarioModifica As String, ByVal Estado As String, ByVal IdRegistro As String)
+        If IdCarrera = "" Then IdCarrera = -1
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.UpdateDatosVeedor(IdCodProv, IdSigla, codProv, Tomo, Asiento, Nombre, Apellido, IdOrganismo, IdFacultad, IdCarrera, IdProvincia, IdDistrito, IdCorregimiento, Correo, Telefono, Celular, IdUsuarioModifica, Estado, IdRegistro)
+
+        If dt.Rows.Count > 0 Then
+            If dt.Rows(0).Item("Respuesta") = "OK" Then
+
+                EditUser.Value = "SI"
+
+                ConsultarVeedores()
+                dtMensaje = ObjInterfacesJP.ConsultarMensaje("ACT", "")
+                Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+            Else
+            End If
+        End If
+
+
+    End Sub
+
+    Private Sub GridVeedores_RowDataBound(sender As Object, e As GridViewRowEventArgs) Handles GridVeedores.RowDataBound
+        If e.Row.RowType = DataControlRowType.DataRow Then
+            Dim index As Integer = e.Row.RowIndex
+            Dim lblUltimaModificacion As Label = e.Row.FindControl("DatosModificacion")
+            Dim lblUsuario As Label = e.Row.FindControl("user")
+
+            lblUsuario.Text = GridVeedores.DataKeys(index)("UsuarioModifica")
+
+
+            If lblUsuario.Text <> "" Then
+                Dim CodigoSistema As New Integer
+                Dim Data As New DataTable
+
+                CodigoSistema = ObjInterfacesJP.CodigoSistema()
+                Data = ObjInterfacesJP.BuscarNombreUsuarios(lblUsuario.Text, CodigoSistema)
+
+                lblUltimaModificacion.Text = Data.Rows(0).Item("Nombre_P") + " " + Data.Rows(0).Item("Apellido_P") + " " + GridVeedores.DataKeys(index)("FechaModifica") + " "
+            End If
+
+        End If
+    End Sub
+
+    Private Sub txtApellido_Load(sender As Object, e As EventArgs) Handles txtApellido.Load
+
+    End Sub
+
+    Private Sub ddlEstados_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlEstados.SelectedIndexChanged
+        Dim dtProyectosVeedor As New DataTable
+        dtProyectosVeedor = ObjInterfacesJP.BuscarProyectoActivosVeedorBY_ID(TxtIdentificador.Text)
+
+        Dim ArregloProyectos As New List(Of String)
+
+        Dim Proyectos As String = ""
+
+        If (dtProyectosVeedor.Rows.Count > 0) Then
+
+            For Each row In dtProyectosVeedor.Rows
+
+                ArregloProyectos.Add(row.Item("IdProyecto"))
+
+                Proyectos = String.Join(",", ArregloProyectos.ToArray())
+
+            Next
+
+            dtMensaje = ObjInterfacesJP.ConsultarMensaje("VAE", Proyectos)
+            Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+
+            ddlEstados.SelectedValue = "A"
+            ddlEstados.Enabled = False
+
+        End If
+
+    End Sub
+
+    Private Function PhoneFormater(ByVal value As String, Optional ByVal Rango As Integer = 7) As String
+        Dim SoloFormatoTel As String = Regex.Replace(value, "[^0-9]", "")
+        Dim strFormatedNumber As String = ""
+        If Not SoloFormatoTel = "" Then
+            If SoloFormatoTel.Length >= 7 Then
+                If SoloFormatoTel.Length > Rango Then
+                    SoloFormatoTel = SoloFormatoTel.Substring(0, Rango)
+                End If
+                strFormatedNumber = CLng(SoloFormatoTel).ToString("###-####")
+            Else
+                strFormatedNumber = Regex.Replace(value, "[^0-9]+[^-]+[^0-9]", "")
+            End If
+        End If
+        Return strFormatedNumber
+    End Function
+End Class

@@ -1,0 +1,29 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_ListarEntidades]    Script Date: 7/21/2022 12:13:31 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 13/07/2022
+-- Description:	Trae lista de entidades
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_ListarEntidades] --1
+@IdProvincia int
+
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+	SELECT M.CodEntidad,E.Descripcion
+	FROM [BD_RendicionCuenta].[dbo].[CSGOL_TF_PROVINCIAMUNICIPIOS] AS M
+
+	LEFT JOIN [BD_RendicionCuenta].[dbo].[V_EntidadesScafid] AS E
+	ON M.CodEntidad = E.CODIGOENTIDAD AND E.CODIGOAREA = 5
+
+	WHERE M.IdProvincia = @IdProvincia
+	
+END

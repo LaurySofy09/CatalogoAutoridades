@@ -1,0 +1,82 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_ListarProvinciasXIdentificador]    Script Date: 7/21/2022 12:16:54 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 19/07/2022
+-- Description:	Listar provincias por identificador
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_ListarProvinciasXIdentificador] --99012
+@Identificador AS INT
+
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+		DECLARE @DateFormat varchar(20)
+		SET @DateFormat = 'dd/MM/yyyy hh:mm tt'
+
+	    DECLARE @CONTADOR AS INT
+		DECLARE @CANTIDAD_PROVINCIAS AS INT
+
+		DECLARE @TABLA_PROVINCIAS AS TABLE
+			   (
+					   SEC INT IDENTITY
+					 , IdProvincia INT
+
+			   )
+
+		INSERT INTO @TABLA_PROVINCIAS
+					 SELECT IdProvincia
+					 FROM [BD_RendicionCuenta].[dbo].[CSGOL_TF_USUARIOSDNFG]
+					 WHERE Identificador = @Identificador AND Estado = 'A'
+
+
+		SET @CANTIDAD_PROVINCIAS = (SELECT COUNT(*) FROM @TABLA_PROVINCIAS)
+		SET @CONTADOR = 1  
+
+		DECLARE @TABLA_AUTORIDADES AS TABLE
+			   (
+					 IdAutoridad INT
+					,Nombre VARCHAR (100)
+					,Apellido VARCHAR(100)
+					,IdCodProvincia INT
+					,IdSiglas INT
+					,CedulaProvincia VARCHAR(4)
+					,CedulaTomo VARCHAR(10)
+					,CedulaAsiento VARCHAR(10)
+					,Entidad VARCHAR(200)
+					,Dependencia VARCHAR(200)
+					,Provincia VARCHAR(200)
+					,Distrito VARCHAR(200)
+					,BuzonCorreo VARCHAR(200)
+					,Telefono VARCHAR(15)
+					,Celular VARCHAR(15)
+					,Estado VARCHAR(20)
+					,UsuarioRegistra VARCHAR(300)
+					,FechaRegistro VARCHAR(200)
+					,UsuarioModifica VARCHAR(300)
+					,FechaModifica VARCHAR(200)
+			   )
+		DECLARE @ITEM AS INT
+		IF @CANTIDAD_PROVINCIAS > 0
+			   BEGIN
+			   WHILE @CONTADOR <= @CANTIDAD_PROVINCIAS
+					 BEGIN
+						SET @ITEM = (SELECT IdProvincia FROM @TABLA_PROVINCIAS WHERE SEC = @CONTADOR)
+							INSERT INTO @TABLA_AUTORIDADES
+								   EXEC [dbo].[PE_L_CSGOL_MostrarAutoridad] @ITEM
+             
+					 SET @CONTADOR = @CONTADOR + 1
+					 END
+			   END
+
+		SELECT * FROM  @TABLA_AUTORIDADES
+
+
+END

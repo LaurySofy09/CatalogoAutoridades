@@ -1,0 +1,39 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_ListarProvinciasXRol]    Script Date: 7/21/2022 12:16:06 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 18/07/2022
+-- Description:	Listar provincias por rol
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_ListarProvinciasXRol] --99012
+@Identificador as int
+
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	    
+	  SELECT DISTINCT
+	 --g.IdentificadorSsae,
+	 --g.[Nombre]+' '+g.[ApellidoPaterno] Nombre,
+	 --g.Cedula,
+	 f.IdProvincia,
+	 p.Descripcion as  Provincia
+	 --v.Descripcion, v.IDROL  
+
+	   FROM [dbo].[CSGOL_TC_USUARIOSGENERALES] g
+	
+		inner join [dbo].[CSGOL_TF_USUARIOSDNFG] f ON f.Identificador = g.IdentificadorSsae and f.Estado = 'A'
+
+		inner join dbo.TF_PROVINCIA p ON f.IdProvincia = p.IdProvincia 
+
+		inner join [dbo].[V_CSGOL_IDENTIFICA_ROLES] v ON v.IDUSUARIO = g.IdentificadorSsae
+
+		WHERE Identificador = @Identificador
+
+END

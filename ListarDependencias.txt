@@ -1,0 +1,24 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_CSGOL_ListarDependencias]    Script Date: 7/21/2022 12:14:18 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		Laura Sofía Domínguez
+-- Create date: 13/07/2022
+-- Description:	Trae lista de dependencias
+-- =============================================
+ALTER PROCEDURE [dbo].[PE_L_CSGOL_ListarDependencias]
+@CodEntidad char(2)
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+	SELECT CodDepe, Descripcion
+	FROM [BD_RendicionCuenta].[dbo].[TF_JUNTACOMUNALES]
+	WHERE [TF_JUNTACOMUNALES].CodEntidad = @CodEntidad
+	ORDER BY Descripcion
+END

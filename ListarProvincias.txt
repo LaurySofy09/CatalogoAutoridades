@@ -1,0 +1,13 @@
+USE [BD_RendicionCuenta]
+GO
+/****** Object:  StoredProcedure [dbo].[PE_L_TF_PROVINCIA_REC]    Script Date: 7/21/2022 12:15:15 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER procedure [dbo].[PE_L_TF_PROVINCIA_REC]
+AS
+select IdProvincia, Descripcion 
+from dbo.TF_PROVINCIA 
+where Estado = 'A'
+order by orden

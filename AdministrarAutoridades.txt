@@ -1,0 +1,446 @@
+<%@ Page Title="" Language="vb" AutoEventWireup="false" MasterPageFile="~/index.Master" CodeBehind="AdministrarAutoridades.aspx.vb" Inherits="CGR.CSGOL.UI.AdministrarAutoridades" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:TextBox ID="TxtCodArea" runat="server" CssClass="Oculto"></asp:TextBox>
+    <asp:HiddenField ID="hdnParam" runat="server" />
+     <asp:HiddenField ID="hdnLimpiarFiltro" runat="server" />
+    <%-- Ocultas --%>
+    <asp:TextBox ID="ProvinciaActual" runat="server" Class="Oculto"></asp:TextBox>
+
+    <button id="BtnNvAutor" runat="server" type="button" class="btn btn-success ml-3"><i class="fas fa-plus-square mr-1"></i>Nuevo</button>
+
+    <div id="MdlRegAuto" class="modal" tabindex="-1" data-backdrop="static">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title"><b>Registrar Autoridades - Gobiernos Locales</b></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div id="FormBody" class="modal-body pb-0">
+
+                    <asp:TextBox ID="TxtIdentificador" runat="server" CssClass="form-control Oculto"></asp:TextBox>
+                    <asp:ScriptManager ID="ScriptManager1" runat="server" />
+
+                    <%-- Nombre --%>
+                    <div class="row col-12">
+                        <div class="col-3 text-right">
+                            <asp:Label runat="server"><b>Nombre:</b></asp:Label>
+                            <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                        </div>
+
+                        <div class="col-6">
+                            <asp:TextBox ID="TxtNom" runat="server" CssClass="form-control validarCampo" Names="txtNombre" onkeypress="return sololetras(event)"></asp:TextBox>
+                        </div>
+                    </div>
+
+                    <%--Apellido --%>
+                    <div class="row col-12 pt-2">
+                        <div class="col-3 text-right">
+                            <asp:Label runat="server"><b>Apellido:</b></asp:Label>
+                            <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                        </div>
+
+                        <div class="col-6">
+                            <asp:TextBox ID="TxtApe" runat="server" CssClass="form-control validarCampo" onkeypress="return sololetras(event)"></asp:TextBox>
+                        </div>
+                    </div>
+
+                    <%-- Cédula --%>
+                    <div class="row col-12 pt-2">
+                        <div class="col-3 text-right">
+                            <asp:Label runat="server"><b>Cédula:</b></asp:Label>
+                            <%--<asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>--%>
+                        </div>
+
+                        <%-- CodProvincia --%>
+                        <%--<div class="col-1">
+                            <asp:TextBox ID="TxtCedProv" runat="server" CssClass="form-control validarCampo" placeholder="Prov"></asp:TextBox>
+                        </div>--%>
+
+                        <div class="col-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlValProv" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="false"></asp:DropDownList>
+                                </div>
+                                <div class="col-6 ">
+                                    <asp:DropDownList ID="ddlSiglas" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="false"></asp:DropDownList>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-3">
+                            <div class="row">
+                                <div class="col-6">
+                        <%-- Tomo --%>
+                            <asp:TextBox ID="TxtCedTomo" runat="server" CssClass="form-control" placeholder="Tomo"></asp:TextBox>
+                        </div>
+
+                        <%-- Asiento --%>
+                        <div class="col-6 ">
+                            <asp:TextBox ID="TxtCedAsi" runat="server" CssClass="form-control" placeholder="Asiento"></asp:TextBox>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+                    <asp:UpdatePanel runat="server" ID="UpdatePanel1" UpdateMode="Conditional">
+                        <ContentTemplate>
+
+                            <%-- Provincia --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Provincia:</b></asp:Label>
+                                    <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlProvincias" runat="server" CssClass="form-control validarCampo" AutoPostBack="true" AppendDataBoundItems="true"></asp:DropDownList>
+                                </div>
+                            </div>
+
+                            <%-- Distrito  --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Distrito:</b></asp:Label>
+                                    <asp:Label runat="server" CssClass="text-danger"></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlDistrito" runat="server" CssClass="form-control validarCampo" AutoPostBack="true" AppendDataBoundItems="true"></asp:DropDownList>
+                                </div>
+                            </div>
+
+                            <%-- Corregimiento --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Corregimiento:</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlCorregimiento" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="true"></asp:DropDownList>
+                                </div>
+                            </div>
+
+                             <%-- Entidad --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Entidad:</b></asp:Label>
+                                     <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlEntidad" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="true"></asp:DropDownList>
+                                </div>
+                            </div>
+
+                            <%-- Dependencia --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Dependencia:</b></asp:Label>
+                                     <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlDependencia" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="true"></asp:DropDownList>
+                                </div>
+                            </div>
+
+                            <%-- Búzon de correo --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Buzón de correo:</b></asp:Label>
+                                    <asp:Label runat="server" CssClass="text-danger"><b>*</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:TextBox ID="TxtCorreo" runat="server" CssClass="form-control" Name="field" placeholder="ejemplo@sitio.com"></asp:TextBox>
+                                    <%--<small id="MensajeValidacionEmail" class="text-danger Oculto"><b>Introduzca una dirección de correo electrónico válida</b></small>--%>
+                                </div>
+                            </div>
+
+                            <%-- Teléfono  --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Teléfono:</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:TextBox ID="TxtTele" runat="server" CssClass="form-control Phone-Number" placeholder="000-0000" TextMode="Phone"></asp:TextBox>
+
+                                </div>
+                            </div>
+
+                            <%-- Celular --%>
+                            <div class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Celular:</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:TextBox ID="TxtCelu" runat="server" CssClass="form-control Phone-Number" TextMode="Phone" placeholder="0000-0000"></asp:TextBox>
+                                </div>
+                            </div>
+
+                            <%-- Panel Detalles registro --%>
+                            <div id="DivEstado" runat="server" class="row col-12 pt-2">
+                                <div class="col-3 text-right">
+                                    <asp:Label runat="server"><b>Estado:</b></asp:Label>
+                                </div>
+
+                                <div class="col-6">
+                                    <asp:DropDownList ID="ddlEstados" runat="server" CssClass="form-control" AppendDataBoundItems="true" AutoPostBack="true">
+                                        <asp:ListItem Value="A" Text="Activo"></asp:ListItem>
+                                        <asp:ListItem Value="I" Text="Inactivo"></asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                            </div>
+
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+
+
+                      <div id="divregistrado" runat="server" class="row col-12 pt-4">
+                        <div class="col-3 text-right">
+                            <asp:Label runat="server"><b>Registrado por:</b></asp:Label>
+                        </div>
+
+                        <div class="col-6">
+                            <asp:Label runat="server"><%=UsuarioRegistra%> <%=FechaRegistro%> </asp:Label>
+                        </div>
+                    </div>
+
+                    <div id="divmodificado" runat="server" class="row col-12 pt-3">
+                        <div class="col-3 text-right">
+                            <asp:Label runat="server"><b>Modificado por:</b></asp:Label>
+                        </div>
+
+                        <div class="col-6">
+                            <asp:Label runat="server"><%=UsuarioModifica%> <%=FechaModifica%></asp:Label>
+                        </div>
+                    </div>
+
+
+                    <div class="container text-right pb-3 mt-3 ">
+                        <button type="button" id="BtnGuardar" class="btn btn-success validarCampo">Guardar</button>
+                        <button type="button" runat="server" id="BtnGuardarAuto" class="btn btn-success Oculto">Guardar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row pt-3">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="table-responsive">
+                <asp:GridView ID="gvautoridades" runat="server" CssClass="table tableIndexSave" 
+                    DataKeyNames="IdAutoridad,Nombre,Apellido,CedulaProvincia,CedulaTomo,CedulaAsiento,Entidad,Dependencia,Provincia,Distrito,BuzonCorreo,
+                    Telefono,Celular,Estado,UsuarioRegistra,FechaRegistro,UsuarioModifica,FechaModifica"
+                    AutoGenerateColumns="false" ShowHeaderWhenEmpty="True"
+                    emptydatatext="No data available." 
+                    showheader="true">
+
+                    <Columns>
+
+                        <asp:TemplateField>
+                            <ItemTemplate>
+                                <asp:LinkButton ID="lnkBtnAccion" CommandName="Editar" CommandArgument='<%# Eval("IdAutoridad") %>' runat="server" CssClass="btn btn-info " Style="padding-top: 3px; padding-bottom: 3px; padding-left: 18px; padding-right: 18px;">
+                               <i class="fas fa-pen"></i>
+                                </asp:LinkButton>
+                            </ItemTemplate>
+                            <ItemStyle HorizontalAlign="Center" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Nombre">
+                            <ItemTemplate>
+                                <%# Eval("Nombre")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Apellido">
+                            <ItemTemplate>
+                                <%# Eval("Apellido")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Cédula">
+                            <ItemTemplate>
+                                <%# Eval("CedulaProvincia") + "-" + Eval("CedulaTomo") + "-" + Eval("CedulaAsiento")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                         <asp:TemplateField HeaderText="Teléfono | Celular">
+                            <ItemTemplate>
+                                <%# Eval("Telefono") + Salto + Eval("Celular")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Entidad | Dependencia">
+                            <ItemTemplate>
+                                <%# Eval("Entidad") + Salto + Eval("Dependencia")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Provincia">
+                            <ItemTemplate>
+                                <%# Eval("Provincia")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Center" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Distrito">
+                            <ItemTemplate>
+                                <%# Eval("Distrito")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Buzón de correo">
+                            <ItemTemplate>
+                                <%# Eval("BuzonCorreo")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField> 
+
+                        <asp:TemplateField HeaderText="Estado">
+                            <ItemTemplate>
+                                <%# Eval("Estado")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Registrado por">
+                            <ItemTemplate>
+                                <%# Eval("UsuarioRegistra") + Salto + Eval("FechaRegistro")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+
+                        <asp:TemplateField HeaderText="Última Modificación">
+                            <ItemTemplate>
+                                <asp:Label ID="user" runat="server" Text='' CssClass="Oculto"></asp:Label>
+                                <asp:Label ID="DatosModificacion" runat="server" Text=''></asp:Label>
+                                 <%# Eval("UsuarioModifica") + Salto + Eval("FechaModifica")%>
+                            </ItemTemplate>
+                            <HeaderStyle HorizontalAlign="Center" />
+                            <ItemStyle HorizontalAlign="Left" />
+                        </asp:TemplateField>
+                    </Columns>
+                    <EmptyDataTemplate>No hay solicitudes pendientes en este momento.</EmptyDataTemplate>
+                    <%-- optional--%>
+                    <FooterStyle CssClass="footerStyle" />
+                    <%-- Mandatory--%>
+                    <HeaderStyle CssClass="headerStyle" />
+                    <%-- Mandatory--%>
+                    <RowStyle CssClass="rowStyle" />
+
+
+                </asp:GridView>
+
+            </div>
+        </div>
+
+    </div>
+        <asp:HiddenField ID="FlagAccion" runat="server" Value="non" Visible="false" />
+        <asp:HiddenField ID="EditUser" runat="server" Value="non" Visible="false" />
+        <asp:Label ID="IndiceRegistroEditado" runat="server" Text="Label" CssClass="Oculto"></asp:Label>
+
+</asp:Content>
+<asp:Content ID="Content3" ContentPlaceHolderID="scriptOnly" runat="server">
+    <script><%=notifyModal%></script>
+    <script src="../scripts/Formas/AdministrarAutoridades.js"></script>
+    <script>
+        //Funcion para validar que los campos solo sean letras
+        function sololetras(e) {
+            key = e.keyCode || e.which;
+
+            teclado = String.fromCharCode(key).toLowerCase();
+
+            letras = "qwertyuiopasdfghjklñzxcvbnmíóáéú ";
+
+            especiales = "8-37-38-46-164";
+
+            teclado_especial = false;
+
+            for (var i in especiales) {
+                if (key == especiales[i]) {
+                    teclado_especial = true;
+                    break;
+                }
+            }
+
+            if (letras.indexOf(teclado) == -1 && !teclado_especial) {
+                return false;
+            }
+        }
+
+        //Funcion para validar que los campos solo sean numeros
+        function solonumeros(e) {
+            key = e.keyCode || e.which;
+
+            teclado = String.fromCharCode(key).toLowerCase();
+
+            letras = "0123456789 ";
+
+            especiales = "";
+
+            teclado_especial = false;
+
+            for (var i in especiales) {
+                if (key == especiales[i]) {
+                    teclado_especial = true;
+                    break;
+                }
+            }
+
+            if (letras.indexOf(teclado) == -1 && !teclado_especial) {
+                return false;
+            }
+        }
+
+        //Funcion para validar que los campos solo sean letras y numeros sin caracteres especiales
+        function Alfanumerico(e) {
+            key = e.keyCode || e.which;
+
+            teclado = String.fromCharCode(key).toLowerCase();
+
+            letras = "0123456789qwertyuiopasdfghjklñzxcvbnm ";
+
+            especiales = "";
+
+            teclado_especial = false;
+
+            for (var i in especiales) {
+                if (key == especiales[i]) {
+                    teclado_especial = true;
+                    break;
+                }
+            }
+
+            if (letras.indexOf(teclado) == -1 && !teclado_especial) {
+                return false;
+            }
+        }
+    </script>
+</asp:Content>

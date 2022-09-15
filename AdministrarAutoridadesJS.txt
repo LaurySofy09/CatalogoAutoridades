@@ -1,0 +1,421 @@
+
+$(document).ready(function () {
+
+    var tables = $('.tableIndexSave').GridviewFix().DataTable({
+        "lengthMenu": [10, 20, 50, 100],
+        searching: true,
+        info: true,
+        "processing": true,
+        "language": {
+            "sProcessing": "Procesando...",
+            "lengthMenu": "Mostrar _MENU_  Registros por p\xE1ginas",
+            "sZeroRecords": "Sin registros que mostrar",
+            "sEmptyTable": "Sin registros que mostrar",
+            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+            "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+            "sInfoPostFix": "",
+            "sSearch": "Buscar:",
+            "sUrl": "",
+            "sInfoThousands": ",",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        },
+        paging: true,
+        stateSave: true,
+        stateDuration: -1,
+
+        initComplete: function (settings, json) {
+            ///>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            var hdnParam = Funciones.ObtenerObjeto("hdnParam");
+            if (hdnParam.val() == "1") {
+                hdnParam.val("0");
+                $('.tableIndexSave').dataTable().fnDraw();
+            };
+        }
+
+    });
+
+    var hdnLimpiarFiltro = Funciones.ObtenerObjeto("hdnLimpiarFiltro");
+    if (hdnLimpiarFiltro.val() == "1") {
+        hdnLimpiarFiltro.val("0");
+        tables.search('').columns().search('').draw();
+    };
+
+    MascarasTelefonicas();
+
+    $(".Phone-Number").keypress(function (e) {
+        if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57) && e.which != 45) {
+            return false;
+        }
+    })
+
+
+    $("#FormBody").mouseenter(function () { //PRUEBA
+        jQuery(function ($) {
+            MascarasTelefonicas();
+        });
+    });
+
+    //ddlvalprov
+    $('[id$=ddlValProv]').change(function () {
+        var ValorProvCedula = $('[id$=ddlValProv] :selected').val()
+        if (ValorProvCedula != 0) {
+            LimpiarError();
+        }
+    });
+
+    //ddlsiglas
+    $('[id$=ddlSiglas]').change(function () {
+        var ValorSiglas = $('[id$=ddlSiglas] :selected').val()
+        if (ValorSiglas != 1) {
+            LimpiarError();
+        }
+    });
+
+    ValidacionesLSD = (function () {
+
+        var ValidarTextBox = function (idCampo) { //Validar que los tTextBox no esten vacíos (pasar el id del textbox)
+            var campo = ValidacionesLSD.ObtenerObjeto(idCampo);
+            var inputTextBox = $(campo).val()
+            if (inputTextBox == "") {
+                //$(campo).focus();
+                $(campo).addClass('is-invalid');
+            } else {
+                $(campo).removeClass("is-invalid");
+            }
+        }
+
+        var ValidarTelefonoCelular = function (idCampo, iddCampo) { //Validar que los tTextBox de telefono no esten ambos vacíos (pasar el id del textbox)
+            var campo = ValidacionesLSD.ObtenerObjeto(idCampo);
+            var campo2 = ValidacionesLSD.ObtenerObjeto(iddCampo);
+            var inputTextBox = $(campo).val()
+            var inputTextBox2 = $(campo2).val()
+            if ((inputTextBox == "") && (inputTextBox2 == "")) {
+                //$(campo).focus();
+                $(campo).addClass('is-invalid');
+                $(campo2).addClass('is-invalid');
+            } else {
+                $(campo).removeClass("is-invalid");
+                $(campo2).removeClass('is-invalid');
+            }
+        }
+
+        var ValidarDropdownList = function (id_ddl) { //Validar la selección de los dropdownList (Pasar el id del navegador)
+            var ValorDDL = $(id_ddl).val()
+            if (ValorDDL == -1) {
+                $(id_ddl).removeClass("valid");
+                $(id_ddl).addClass('is-invalid');
+                //$(id_ddl).focus();
+            } else {
+                $(id_ddl).removeClass("is-invalid");
+            }
+        }
+
+        var ValidarDropdownProv = function (id_ddl) { //Validar la selección de los dropdownList (Pasar el id del navegador)
+            var ValorDDL = $(id_ddl).val()
+            if (ValorDDL == 0) {
+                $(id_ddl).removeClass("valid");
+                $(id_ddl).addClass('is-invalid');
+                //$(id_ddl).focus();
+            } else {
+                $(id_ddl).removeClass("is-invalid");
+            }
+        }
+
+        var ValidarDropdownSigla = function (id_ddl) { //Validar la selección de los dropdownList (Pasar el id del navegador)
+            var ValorDDL = $(id_ddl).val()
+            if (ValorDDL == 1) {
+                $(id_ddl).removeClass("valid");
+                $(id_ddl).addClass('is-invalid');
+                //$(id_ddl).focus();
+            } else {
+                $(id_ddl).removeClass("is-invalid");
+            }
+        }
+
+        function ObtenerObjeto(idCampo) {
+            var campoId = $("[id$=_" + idCampo + "]").attr("id");
+            if (typeof campoId === "undefined") {
+                // Regresa id de campo en pagina sin MasterPage
+                campoId = idCampo;
+            }
+            var objeto = $("#" + campoId);
+            return objeto;
+        }
+
+        var ValidarCorreo = function (idCampo) {
+            var campo = ValidacionesLSD.ObtenerObjeto(idCampo);
+            var inputTextBox = $(campo).val()
+            if (inputTextBox == "") {
+                $("#MensajeValidacionEmail").addClass('Oculto');
+                $(campo).removeClass("is-invalid");
+            }
+
+            expr = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if (!expr.test(inputTextBox)) {
+                $("#MensajeValidacionEmail").removeClass('Oculto');
+                $(campo).addClass("is-invalid");
+                ValBuzon = false
+            } else {
+                ValBuzon = true
+                $("#MensajeValidacionEmail").addClass('Oculto');
+                $(campo).removeClass("is-invalid");
+            }
+        }
+
+        return {
+            ValidarTextBox: ValidarTextBox,
+            ValidarddL: ValidarDropdownList,
+            ObtenerObjeto: ObtenerObjeto,
+            ValidadTelCel: ValidarTelefonoCelular,
+            ValidarCorreo: ValidarCorreo,
+            ValidarddLP: ValidarDropdownProv,
+            ValidarddLS: ValidarDropdownSigla
+        };
+
+
+    })();
+
+    var BtnGuardar = Funciones.ObtenerObjeto("BtnGuardar");
+    var BtnGuardarAuto = Funciones.ObtenerObjeto("BtnGuardarAuto");
+
+    BtnGuardar.click(function (event) {
+        var Nombre = $("#ContentPlaceHolder1_TxtNom").val()
+        var Apellido = $("#ContentPlaceHolder1_TxtApe").val()
+        //var CodTomo = document.getElementById("ContentPlaceHolder1_TxtCedTomo").value
+        //var CodAsiento = document.getElementById("ContentPlaceHolder1_TxtCedAsi").value
+        var ddlProvincia = $("#ContentPlaceHolder1_ddlProvincias :selected").val()
+        var ddlDistrito = $("#ContentPlaceHolder1_ddlDistrito :selected").val()
+        var ddlCorreg = $("#ContentPlaceHolder1_ddlCorregimiento :selected").val()
+        var ddlEntidad = $("#ContentPlaceHolder1_ddlEntidad :selected").val()
+        var ddlDepe = $("#ContentPlaceHolder1_ddlDependencia :selected").val()
+        var ddlEstado = $("#ContentPlaceHolder1_ddlEstados :selected").val()
+        var TxtCelu = Funciones.ObtenerObjeto("TxtCelu").val();
+        var TxtTele = Funciones.ObtenerObjeto("TxtTele").val();
+        var CorreoBuzon = Funciones.ObtenerObjeto("TxtCorreo").val();
+        //var ddlValProv = $("#ContentPlaceHolder1_ddlValProv :selected").val()
+        //var ddlSiglas = $("#ContentPlaceHolder1_ddlSiglas :selected").val()
+        var FormComplete = new Boolean(null);
+        var valTelefono = new Boolean(null);
+        var valCelular = new Boolean(null);
+        var ValBuzon = new Boolean(null);
+        var Celular = TxtCelu.replace('-', '');
+        var Telefono = TxtTele.replace('-', '');
+
+        if (Celular.length != 8 && TxtCelu != "") {
+            //event.preventDefault();
+            Funciones.ModalError("El número de celular debe tener 8 dígitos.");
+            valCelular = false;
+        } else { valCelular = true; }
+
+
+        if (Telefono.length != 7 && TxtTele != "") {
+            //event.preventDefault();
+            Funciones.ModalError("El número de telefono debe tener 7 dígitos.");
+            valTelefono = false;
+        } else { valTelefono = true; }
+
+        if (TxtCelu == "" && TxtTele == "") {
+            //Funciones.ModalError("Inserte telefono o celular o ambos");
+            valCelular = false;
+            valTelefono = false;
+        }
+        else {
+            valCelular = true;
+            valTelefono = true;
+        }
+
+        if (CorreoBuzon == "") {
+            ValBuzon = false;
+        }
+        else {
+            expr = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if (!expr.test(CorreoBuzon)) {
+                Funciones.ModalError("Formato de correo invalido ");
+                ValBuzon = false;
+            }
+            else {
+                ValBuzon = true;
+            }
+        }
+
+        //CodTomo.length == 0 || CodAsiento.length == 0 ||
+        if (Nombre.length == 0 || Apellido.length == 0 || ddlProvincia == "-1" || ddlEntidad == "-1" || ddlDepe == "-1" || ValBuzon == false || valTelefono == false || valCelular == false) {
+
+            ValidacionesLSD.ValidarTextBox("TxtNom");
+            ValidacionesLSD.ValidarTextBox("TxtApe");
+            //ValidacionesLSD.ValidarTextBox("TxtCedTomo");
+            //ValidacionesLSD.ValidarTextBox("TxtCedAsi");
+            ValidacionesLSD.ValidarddL("#ContentPlaceHolder1_ddlProvincias");
+            ValidacionesLSD.ValidarddL("#ContentPlaceHolder1_ddlEntidad");
+            ValidacionesLSD.ValidarddL("#ContentPlaceHolder1_ddlDependencia");
+            ValidacionesLSD.ValidadTelCel("TxtTele", "TxtCelu");
+            ValidacionesLSD.ValidarCorreo("TxtCorreo");
+
+            FormComplete = false
+            Funciones.ModalError("Faltan datos obligatorios por ingresar, favor revisar");
+            //Ocultar el boton guardar si el formulario no esta completado
+            $("#BtnGuardar").removeClass('Oculto');
+            $("#ContentPlaceHolder1_BtnGuardarAuto").addClass('Oculto');
+
+        } else {
+
+
+            var Telefono = $('[id$=TxtTele]').val();
+            var Celular = $('[id$=TxtCelu]').val();
+            var ddlValProv = $("#ContentPlaceHolder1_ddlValProv :selected").val()
+            var ddlSiglas = $("#ContentPlaceHolder1_ddlSiglas :selected").val()
+            var CodTomo = document.getElementById("ContentPlaceHolder1_TxtCedTomo").value
+            var CodAsiento = document.getElementById("ContentPlaceHolder1_TxtCedAsi").value
+
+            if (Telefono.length >= 1 && Telefono.length < 8) {
+                $('[id$=TxtTele]').addClass("is-invalid");
+                $('[id$=TxtTele]').addClass('form-control error');
+            } else if (Celular.length >= 1 && Celular.length < 9) {
+                $('[id$=TxtCelu]').addClass("is-invalid");
+                $('[id$=TxtCelu]').addClass('form-control error');
+            } else if ((ddlValProv != 0 || ddlSiglas != 1) && (CodTomo == "" || CodAsiento == "")) {
+                $('[id$=TxtCedTomo]').addClass("is-invalid");
+                $('[id$=TxtCedTomo]').addClass('form-control error');
+                $('[id$=TxtCedAsi]').addClass("is-invalid");
+                $('[id$=TxtCedAsi]').addClass('form-control error');
+                Funciones.ModalError("Campo de cédula incompleto");
+            } else if ((ddlValProv == 0 || ddlSiglas == 1) && (CodTomo.length > 0 && CodAsiento.length == 0)) {
+                $('[id$=TxtCedTomo]').addClass("is-invalid");
+                $('[id$=TxtCedTomo]').addClass('form-control error');
+                $('[id$=TxtCedAsi]').addClass("is-invalid");
+                $('[id$=TxtCedAsi]').addClass('form-control error');
+                Funciones.ModalError("Campo de cédula incompleto");
+            } else if ((ddlValProv == 0 || ddlSiglas == 1) && (CodTomo.length == 0 && CodAsiento.length > 0)) {
+                $('[id$=TxtCedTomo]').addClass("is-invalid");
+                $('[id$=TxtCedTomo]').addClass('form-control error');
+                $('[id$=TxtCedAsi]').addClass("is-invalid");
+                $('[id$=TxtCedAsi]').addClass('form-control error');
+                Funciones.ModalError("Campo de cédula incompleto");
+            } else if ((ddlValProv == 0 && ddlSiglas == 1) && (CodTomo.length > 0 || CodAsiento.length > 0 )) {
+                $('[id$=TxtCedTomo]').addClass("is-invalid");
+                $('[id$=TxtCedTomo]').addClass('form-control error');
+                $('[id$=TxtCedAsi]').addClass("is-invalid");
+                $('[id$=TxtCedAsi]').addClass('form-control error');
+                Funciones.ModalError("Campo de cédula incompleto");
+            } else {
+
+                $(".form-control.error").each(function (index) {
+                    $(this).removeClass("error is-invalid");
+                });
+
+                // Remueve los label
+                $("label").remove(".error");
+
+                //Limpiar label de cedula
+                $('[id$=ErrorMsgCedula]').hide();
+                $('[id$=txtTomo]').removeClass('is-invalid');
+                $('[id$=txtAsiento]').removeClass('is-invalid');
+
+
+                FormComplete = true
+
+                //Mostrar el boton guardar si el formulario fue completado
+                $("#BtnGuardar").addClass('Oculto');
+                $("#ContentPlaceHolder1_BtnGuardarAuto").removeClass('Oculto');
+                BtnGuardarAuto.click();
+            }
+        }
+
+    });
+});
+
+//Función para contar los dígitos
+function ContarDigitos(idCampo, cantidadMaxima) {
+    cantidadMaxima = (typeof cantidadMaxima !== 'undefined') ? cantidadMaxima : -1;
+
+    // Obtiene Objeto Jquery
+    var objeto = Funciones.ObtenerObjeto(idCampo);
+
+    // Si no se definio Cantidad de caracteres como parametro busca valor en atributo data. Si no tiene valor pone como default 50 caracteres
+    if (cantidadMaxima == -1) {
+        cantidadMaxima = (typeof objeto.data().maxcaracter !== 'undefined') ? objeto.data().maxcaracter : 50;
+    }
+
+    if (cantidadMaxima > 0) {
+        objeto.counter({
+            count: 'down',
+            goal: cantidadMaxima,
+            msg: 'Dígitos restantes',
+            append: true
+        });
+    }
+
+}
+
+function MascarasTelefonicas() {
+    //Máscaras Tel
+
+    $("#ContentPlaceHolder1_TxtTele").keyup(function () {
+
+        $("#ContentPlaceHolder1_TxtTele").mask("000-0000");
+
+
+        $("#ContentPlaceHolder1_TxtTele_counter").remove();
+
+        ContarDigitos('TxtTele', 8);
+        var CantidadDigitosTel = $("#ContentPlaceHolder1_TxtTele_counter span").text();
+
+        if (CantidadDigitosTel == 0 || CantidadDigitosTel == 8) {
+            $("#ContentPlaceHolder1_TxtTele_counter").remove();
+        }
+
+    });
+
+    //Máscaras Cel
+    $("#ContentPlaceHolder1_TxtCelu").keyup(function () {
+
+        $("#ContentPlaceHolder1_TxtCelu").mask("0000-0000");
+
+
+        $("#ContentPlaceHolder1_TxtCelu_counter").remove();
+
+        ContarDigitos('TxtCelu', 9);
+        var CantidadDigitosCel = $("#ContentPlaceHolder1_TxtCelu_counter span").text();
+
+        if (CantidadDigitosCel == 0 || CantidadDigitosCel == 9) {
+            $("#ContentPlaceHolder1_TxtCelu_counter").remove();
+        }
+
+    });
+
+
+
+}
+
+function LimpiarError() {
+    $(".form-control.error").each(function (index) {
+        $(this).removeClass("error is-invalid");
+    });
+
+    // Remueve los label
+    $("label").remove(".error");
+
+    //Limpiar label de cedula
+    $('[id$=ErrorMsgCedula]').hide();
+    $('[id$=TxtCedTomo]').removeClass('is-invalid');
+    $('[id$=TxtCedAsi]').removeClass('is-invalid');
+
+};
+
+
+
+
+
+
+

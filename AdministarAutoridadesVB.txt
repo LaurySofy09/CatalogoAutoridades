@@ -1,0 +1,655 @@
+Public Class AdministrarAutoridades
+    Inherits System.Web.UI.Page
+    Dim ObjInterfacesJP As New InterfacesJP
+    Dim ObjInterzGeneral As New InterfazJF
+    Dim ObjInterLSD As New InterfazLSD
+    Public notifyModal As String = ""
+    Public Salto As String = "<br/>"
+    Public UsuarioRegistra As String = ""
+    Public FechaRegistro As String = ""
+    Public UsuarioModifica As String = ""
+    Public FechaModifica As String = ""
+    Dim dtMensaje As New DataTable
+    Private _codigoError As Integer = 0
+    Dim ArregloRoles As New List(Of Integer)
+    Dim IdUser As String
+    Dim lws As New InterfazGeneral
+    Dim V As Boolean = True
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        If Not (IsPostBack) Then
+            hdnParam.Value = 1
+            hdnLimpiarFiltro.Value = 1
+            divregistrado.Visible = False
+            divmodificado.Visible = False
+            ddlDistrito.Enabled = False
+            ddlCorregimiento.Enabled = False
+            ddlEntidad.Enabled = False
+            ddlDependencia.Enabled = False
+
+            Roles()
+
+        End If
+    End Sub
+
+    Private Sub Roles()
+        Dim Identificador As String = Session("IdentificadorUsuario")
+        Dim W As New DataTable
+        W = ObjInterLSD.IdentificadorVSrol(Identificador)
+
+        For i As Integer = 0 To W.Rows.Count - 1
+            If (W(i)("IDROL") = 1) Then
+                ConsultarAutoridadesTotal()
+                CargarCatalogoProvinciasTotal()
+                i = i + W.Rows.Count
+            ElseIf ((W(i)("IDROL") = 2) Or (W(i)("IDROL") = 3)) Then
+                ConsultarAutoridades(Identificador)
+                CargarCatalogoProvincias(Identificador)
+                i = i + W.Rows.Count
+            ElseIf (W(i)("IDROL") = 4) Then
+                ConsultarAutoridadesTotal()
+                CargarCatalogoProvinciasTotal()
+                i = i + W.Rows.Count
+            End If
+        Next
+    End Sub
+
+    Private Function RolesRetorno()
+        Dim Identificador As String = Session("IdentificadorUsuario")
+        Dim W As New DataTable
+        Dim F As Integer = 0
+        W = ObjInterLSD.IdentificadorVSrol(Identificador)
+
+        For i As Integer = 0 To W.Rows.Count - 1
+            If (W(i)("IDROL") = 1) Then
+                ConsultarAutoridadesTotal()
+                CargarCatalogoProvinciasTotal()
+                i = i + W.Rows.Count
+                V = True
+            ElseIf ((W(i)("IDROL") = 2) Or (W(i)("IDROL") = 3)) Then
+                ConsultarAutoridades(Identificador)
+                CargarCatalogoProvincias(Identificador)
+                i = i + W.Rows.Count
+                V = False
+            ElseIf (W(i)("IDROL") = 4) Then
+                ConsultarAutoridadesTotal()
+                CargarCatalogoProvinciasTotal()
+                i = i + W.Rows.Count
+                V = True
+            End If
+        Next
+        Return V
+    End Function
+
+    Private Sub ConsultarAutoridades(ByVal Identificador As String)
+
+        Dim dtAutoridades As New DataTable
+
+        dtAutoridades = ObjInterLSD.ListarProvinciasID(Identificador)
+
+        'gvautoridades.DataSource = Nothing
+        gvautoridades.DataSource = dtAutoridades
+        gvautoridades.DataBind()
+
+        If dtAutoridades.Rows.Count > 0 Then
+            BtnNvAutor.Visible = True
+
+            gvautoridades.DataSource = dtAutoridades
+            gvautoridades.DataBind()
+
+            Try
+                If EditUser.Value = "SI" Then
+                    gvautoridades.Rows(IndiceRegistroEditado.Text).BackColor = Drawing.Color.AliceBlue
+                End If
+            Catch ex As Exception
+
+            End Try
+
+        Else
+            BtnNvAutor.Visible = True
+        End If
+
+    End Sub
+
+    Private Sub ConsultarAutoridadesTotal()
+
+        Dim dtAutoridades As New DataTable
+
+        dtAutoridades = ObjInterLSD.MostrarAutoridades()
+
+        gvautoridades.DataSource = Nothing
+        gvautoridades.DataBind()
+
+        If dtAutoridades.Rows.Count > 0 Then
+            BtnNvAutor.Visible = True
+
+            gvautoridades.DataSource = dtAutoridades
+            gvautoridades.DataBind()
+
+            If EditUser.Value = "SI" Then
+                gvautoridades.Rows(IndiceRegistroEditado.Text).BackColor = Drawing.Color.AliceBlue
+            End If
+
+        Else
+            BtnNvAutor.Visible = True
+        End If
+
+    End Sub
+
+    Private Sub BtnNvAutor_ServerClick(sender As Object, e As EventArgs) Handles BtnNvAutor.ServerClick
+        TxtNom.Text = ""
+        TxtApe.Text = ""
+        TxtCedTomo.Text = ""
+        TxtCedAsi.Text = ""
+        TxtCorreo.Text = ""
+        TxtTele.Text = ""
+        TxtCelu.Text = ""
+
+        ddlValProv.SelectedIndex = "-1"
+        ddlSiglas.SelectedIndex = "-1"
+
+        ddlProvincias.SelectedIndex = "-1"
+
+        ddlDistrito.SelectedIndex = "-1"
+        ddlDistrito.Enabled = False
+
+        ddlCorregimiento.SelectedIndex = "-1"
+        ddlCorregimiento.Enabled = False
+
+        ddlEntidad.SelectedIndex = "-1"
+
+        ddlDependencia.SelectedIndex = "-1"
+        ddlDependencia.Enabled = False
+
+        ddlEstados.SelectedIndex = "-1"
+        DivEstado.Visible = True
+
+        divregistrado.Visible = False
+        divmodificado.Visible = False
+
+        notifyModal = "$('#MdlRegAuto').modal('show');"
+        FlagAccion.Value = "Nuevo" 'Nuevo Registro
+
+        CondicionesCampoCedula()
+        CargarValoresCampoCedula()
+
+    End Sub
+
+    Private Sub CondicionesCampoCedula()
+
+        'CAMPO PROVINCIA
+        Dim dtProvincia As DataTable = ObjInterfacesJP.ParametrosCampoCedula(54) 'Provincia
+        If dtProvincia.Rows.Count > 0 Then
+            'Asignar la cantidad de caracteres permitido al campo
+            'txtProv.Attributes.Add("MaxLength", dtProvincia.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtProvincia.Rows(0).Item("ValueString") = 0 Then
+                'txtProv.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtProvincia.Rows(0).Item("ValueString") = 1 Then
+                'txtProv.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Provincia es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Provincia de la cédula")
+        End If
+
+
+        'CAMPO TOMO
+        Dim dtTomo As DataTable = ObjInterfacesJP.ParametrosCampoCedula(55) 'Tomo
+        If dtTomo.Rows.Count > 0 Then
+            TxtCedTomo.Attributes.Add("MaxLength", dtTomo.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtTomo.Rows(0).Item("ValueString") = 0 Then
+                TxtCedTomo.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtTomo.Rows(0).Item("ValueString") = 1 Then
+                TxtCedTomo.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Provincia es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Tomo de la cédula")
+        End If
+
+
+        'CAMPO ASIENTO
+        Dim dtAsiento As DataTable = ObjInterfacesJP.ParametrosCampoCedula(57) 'Asiento
+        If dtAsiento.Rows.Count > 0 Then
+            TxtCedAsi.Attributes.Add("MaxLength", dtAsiento.Rows(0).Item("ValueInt"))
+
+            'Validar si el campo es numerifo o alfanumerico
+            If dtAsiento.Rows(0).Item("ValueString") = 0 Then
+                TxtCedAsi.Attributes.Add("onkeypress", "return solonumeros(event)")
+
+            ElseIf dtAsiento.Rows(0).Item("ValueString") = 1 Then
+                TxtCedAsi.Attributes.Add("onkeypress", "return Alfanumerico(event)")
+            Else
+                Funciones.ModalErrorCodeBehind("El parametro de tipo de dato para el campo Asiento es incorrecto o esta vacío.")
+            End If
+
+        Else
+            Funciones.ModalErrorCodeBehind("No se encontraron parametros para el campo de Asiento de la cédula")
+        End If
+
+    End Sub
+
+    Private Sub CargarValoresCampoCedula()
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarValoresProvinciaCampoCedula()
+
+        If dt.Rows.Count > 0 Then
+            ddlValProv.Items.Clear()
+
+            For Each row As DataRow In dt.Rows
+                ddlValProv.Items.Add(New ListItem(row("ValorProvincia"), row("IdProvincia")))
+            Next
+            ddlValProv.SelectedValue = 0
+
+        End If
+
+
+        dt = ObjInterfacesJP.ListarSiglasCampoCedula()
+
+        If dt.Rows.Count > 0 Then
+            ddlSiglas.Items.Clear()
+
+            For Each row As DataRow In dt.Rows
+                ddlSiglas.Items.Add(New ListItem(row("Siglas"), row("Id")))
+            Next
+            ddlSiglas.SelectedValue = 1
+
+        End If
+
+
+    End Sub
+
+    Private Sub CargarCatalogoProvincias(ByVal Identificador As String)
+        ddlProvincias.Items.Clear()
+        Dim dt As New DataTable
+        'dt = ObjInterfacesJP.ListarProvincias()
+        dt = ObjInterLSD.ListarProvinciasRol(Identificador)
+
+        ''limpiar Dropdown
+        ddlProvincias.Items.Clear()
+
+        ddlProvincias.Items.Add(New ListItem("-- Seleccione Provincia --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlProvincias.Items.Add(New ListItem(row("Provincia"), row("IdProvincia")))
+        Next
+        ddlDistrito.Items.Add(New ListItem("-- Seleccione Distrito --", -1))
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+        ddlEntidad.Items.Add(New ListItem("-- Seleccione Entidad --", -1))
+    End Sub
+
+    Private Sub CargarCatalogoProvinciasTotal()
+        ddlProvincias.Items.Clear()
+        Dim dt As New DataTable
+        'dt = ObjInterfacesJP.ListarProvincias()
+        dt = ObjInterLSD.ListarProvincias()
+
+        ''limpiar Dropdown
+        ddlProvincias.Items.Clear()
+
+        ddlProvincias.Items.Add(New ListItem("-- Seleccione Provincia --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlProvincias.Items.Add(New ListItem(row("Descripcion"), row("IdProvincia")))
+        Next
+        ddlDistrito.Items.Add(New ListItem("-- Seleccione Distrito --", -1))
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+        ddlEntidad.Items.Add(New ListItem("-- Seleccione Entidad --", -1))
+    End Sub
+
+    Private Sub CargarCatalogoEntidades(ByVal CodProvincia As String)
+
+        Dim dt As New DataTable
+        dt = ObjInterLSD.ListarEntidades(CodProvincia)
+
+        ''limpiar Dropdown
+        ddlEntidad.Items.Clear()
+
+        ddlEntidad.Items.Add(New ListItem("-- Seleccione Entidad --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlEntidad.Items.Add(New ListItem(row("Descripcion"), row("CodEntidad")))
+        Next
+        ddlDependencia.Items.Add(New ListItem("-- Seleccione Dependencia --", -1))
+        ddlEntidad.Enabled = True
+    End Sub
+
+    Private Sub CargarCatalogoDistritos(ByVal CodProvincia As String)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarDistritos(CodProvincia)
+
+        ''limpiar Dropdown
+        ddlDistrito.Items.Clear()
+
+        ddlDistrito.Items.Add(New ListItem("-- Seleccione Distrito --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlDistrito.Items.Add(New ListItem(row("descripcion"), row("iddistrito")))
+        Next
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+        ddlDistrito.Enabled = True
+
+    End Sub
+
+    Private Sub CargarCatalogoDependencia(ByVal CodEntidad As String)
+
+        Dim dt As New DataTable
+        dt = ObjInterLSD.ListarDependencias(CodEntidad)
+
+        ''limpiar Dropdown
+        ddlDependencia.Items.Clear()
+
+        ddlDependencia.Items.Add(New ListItem("-- Seleccione Dependencia --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlDependencia.Items.Add(New ListItem(row("Descripcion"), row("CodDepe")))
+        Next
+        ddlDependencia.Enabled = True
+
+    End Sub
+
+    Private Sub CargarCatalogoCorregimientos(ByVal IdDistrito As Integer)
+
+        Dim dt As New DataTable
+        dt = ObjInterfacesJP.ListarCorregimientos(IdDistrito)
+
+        ''limpiar Dropdown
+        ddlCorregimiento.Items.Clear()
+
+        ddlCorregimiento.Items.Add(New ListItem("-- Seleccione Corregimiento --", -1))
+
+        For Each row As DataRow In dt.Rows
+            ddlCorregimiento.Items.Add(New ListItem(row("descripcion"), row("idcorreg")))
+        Next
+        ddlCorregimiento.Enabled = True
+
+    End Sub
+
+    Private Sub ddlProvincias_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlProvincias.SelectedIndexChanged
+
+        CargarCatalogoDistritos(ddlProvincias.SelectedValue)
+        CargarCatalogoEntidades(ddlProvincias.SelectedValue)
+        CargarCatalogoCorregimientos(ddlDistrito.SelectedValue)
+        CargarCatalogoDependencia(ddlEntidad.SelectedValue)
+    End Sub
+
+    Private Sub BtnGuardarAuto_ServerClick(sender As Object, e As EventArgs) Handles BtnGuardarAuto.ServerClick
+        RegistrarAutoridad()
+    End Sub
+
+    Private Sub RegistrarAutoridad()
+        Dim Prov As String = ""
+        Dim dt As New DataTable
+        TxtCodArea.Text = "5"
+        Dim Identificador As String = Session("IdentificadorUsuario") 'ObjInterzGeneral.GetCookie("ssIdUser")
+
+        Dim Valprov = ddlValProv.SelectedValue
+        Dim Siglas = ddlSiglas.SelectedItem.Text
+        Dim V As New Boolean
+
+
+        If (Valprov = 0 And Siglas <> "00") Then
+            Prov = Siglas
+        ElseIf (Siglas = "00" And Valprov <> 0) Then
+            Prov = Valprov
+        ElseIf (Siglas <> "00" And Valprov <> 0) Then
+            Prov = Valprov + Siglas
+        End If
+
+        If FlagAccion.Value = "Nuevo" Then
+
+            'dt = ObjInterLSD.BuscarAutoCedula(Prov, TxtCedTomo.Text.Trim, TxtCedAsi.Text.Trim)
+            dt = ObjInterLSD.BuscarAutoCedula(TxtNom.Text.Trim, TxtApe.Text.Trim, ddlEntidad.SelectedValue, TxtCorreo.Text.Trim)
+            If dt.Rows.Count > 0 Then
+                dtMensaje = ObjInterfacesJP.ConsultarMensaje("REG8", "")
+                Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+            Else
+                Dim dtAuto As New DataTable
+                dtAuto = ObjInterLSD.InsertarAutoridad(TxtNom.Text.Trim, TxtApe.Text, ddlValProv.SelectedValue, ddlSiglas.SelectedValue, Prov, TxtCedTomo.Text, TxtCedAsi.Text, ddlEntidad.SelectedValue, ddlDependencia.SelectedValue, TxtCodArea.Text, ddlProvincias.SelectedValue.ToString, ddlDistrito.SelectedValue, ddlCorregimiento.SelectedValue, TxtCorreo.Text, PhoneFormater(TxtTele.Text), PhoneFormater(TxtCelu.Text, 8), ddlEstados.SelectedValue, Identificador)
+                If dtAuto.Rows(0).Item("RESULTADO") = "OK" Then 'respuesta
+                    EditUser.Value = "NO"
+
+                    V = RolesRetorno()
+
+                    If V = True Then
+                        ConsultarAutoridadesTotal()
+                    Else
+                        ConsultarAutoridades(Identificador)
+                    End If
+
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("INEXT", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                    'ElseIf dtAuto.Rows(0).Item("RESULTADO") = "Exist" Then
+                    '    dtMensaje = ObjInterfacesJP.ConsultarMensaje("REG8", "")
+                    '    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                Else
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("INERR", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+                End If
+
+            End If
+
+
+        Else
+            ActualizarDatosAuto(TxtIdentificador.Text, TxtNom.Text.Trim, TxtApe.Text, ddlValProv.SelectedValue, ddlSiglas.SelectedValue, Prov, TxtCedTomo.Text.Trim, TxtCedAsi.Text.Trim, TxtCodArea.Text, ddlEntidad.SelectedValue, ddlDependencia.SelectedValue, ddlProvincias.SelectedValue, ddlDistrito.SelectedValue, ddlCorregimiento.SelectedValue, TxtCorreo.Text, TxtTele.Text, TxtCelu.Text, ddlEstados.SelectedValue, Identificador)
+        End If
+
+    End Sub
+
+    Private Sub ActualizarDatosAuto(ByVal IdAutoridad As String, ByVal Nombre As String, ByVal Apellido As String,
+                                    ByVal IdCodProv As String, ByVal IdSiglas As String, ByVal CedulaProvincia As String, ByVal CedulaTomo As String, ByVal CedulaAsiento As String,
+                                     ByVal CodArea As String, ByVal CodEntidad As String, ByVal CodDependencia As String,
+                                     ByVal IdProvincia As String, ByVal IdDistrito As String, ByVal IdCorregimiento As String,
+                                     ByVal BuzonCorreo As String, ByVal Telefono As String, ByVal Celular As String, ByVal Estado As String,
+                                     ByVal UsuarioModifica As String)
+        TxtCodArea.Text = "5"
+        Dim Identificador As String = Session("IdentificadorUsuario")
+        Dim dt As New DataTable
+        Dim V As New Boolean
+        dt = ObjInterLSD.UpdateDatosAuto(TxtIdentificador.Text, TxtNom.Text.Trim, TxtApe.Text, IdCodProv, IdSiglas, CedulaProvincia, TxtCedTomo.Text, TxtCedAsi.Text, TxtCodArea.Text, ddlEntidad.SelectedValue, ddlDependencia.SelectedValue, ddlProvincias.SelectedValue, ddlDistrito.SelectedValue, ddlCorregimiento.SelectedValue, TxtCorreo.Text, PhoneFormater(TxtTele.Text), PhoneFormater(TxtCelu.Text, 8), ddlEstados.SelectedValue, UsuarioModifica)
+        If dt.Rows.Count > 0 Then
+            If dt.Rows(0).Item("Respuesta") = "OK" Then
+
+                EditUser.Value = "SI"
+
+                V = RolesRetorno()
+
+                If V = True Then
+                    ConsultarAutoridadesTotal()
+                Else
+                    ConsultarAutoridades(Identificador)
+                End If
+
+                dtMensaje = ObjInterfacesJP.ConsultarMensaje("ACT", "")
+                Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje"))
+            Else
+            End If
+        End If
+
+
+    End Sub
+
+    Private Sub ddlDistrito_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlDistrito.SelectedIndexChanged
+        CargarCatalogoCorregimientos(ddlDistrito.SelectedValue)
+    End Sub
+
+    Private Sub ddlEntidad_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ddlEntidad.SelectedIndexChanged
+        CargarCatalogoDependencia(ddlEntidad.SelectedValue)
+    End Sub
+
+    Private Sub LimpiarCampos()
+        TxtNom.Text = ""
+        TxtApe.Text = ""
+        ddlValProv.SelectedValue = "0" 'nuevo
+        ddlSiglas.SelectedValue = "1" 'nuevo
+        TxtCedTomo.Text = ""
+        TxtCedAsi.Text = ""
+        ddlProvincias.SelectedValue = "-1"
+        ddlDistrito.SelectedValue = "-1"
+        ddlCorregimiento.SelectedValue = "-1"
+        ddlEntidad.SelectedValue = "-1"
+        ddlDependencia.SelectedValue = "-1"
+        TxtCorreo.Text = ""
+        TxtTele.Text = ""
+        TxtCelu.Text = ""
+        ddlEstados.SelectedValue = "A"
+    End Sub
+
+    Private Function PhoneFormater(ByVal value As String, Optional ByVal Rango As Integer = 7) As String
+        Dim SoloFormatoTel As String = Regex.Replace(value, "[^0-9]", "")
+        Dim strFormatedNumber As String = ""
+        If Not SoloFormatoTel = "" Then
+            If SoloFormatoTel.Length >= 7 Then
+                If SoloFormatoTel.Length > Rango Then
+                    SoloFormatoTel = SoloFormatoTel.Substring(0, Rango)
+                End If
+                strFormatedNumber = CLng(SoloFormatoTel).ToString("###-####")
+            Else
+                strFormatedNumber = Regex.Replace(value, "[^0-9]+[^-]+[^0-9]", "")
+            End If
+        End If
+        Return strFormatedNumber
+    End Function
+
+    Private Sub gvautoridades_RowCommand(sender As Object, e As GridViewCommandEventArgs) Handles gvautoridades.RowCommand
+
+        Try
+            If e.CommandName = "Editar" Then
+                FlagAccion.Value = "Editar" 'Editar Registro
+
+                Dim IdAutoridad As Integer = e.CommandArgument
+
+                Dim gvr As GridViewRow = CType((CType(e.CommandSource, LinkButton)).NamingContainer, GridViewRow)
+
+                Dim dt As New DataTable
+                Dim data As New DataTable
+                Dim CodigoSistema As New Integer
+
+                dt = ObjInterLSD.BuscarAutoridadID(IdAutoridad)
+                If dt.Rows.Count > 0 Then
+                    CargarValoresCampoCedula()
+                    IndiceRegistroEditado.Text = gvr.RowIndex
+
+                    TxtIdentificador.Text = dt.Rows(0).Item("IdAutoridad")
+                    TxtNom.Text = dt.Rows(0).Item("Nombre")
+                    TxtApe.Text = dt.Rows(0).Item("Apellido")
+                    ddlValProv.SelectedValue = dt.Rows(0).Item("IdCodProvincia")
+
+                    If (dt.Rows(0).Item("IdSiglas") <> 0) Then
+                        ddlSiglas.SelectedValue = dt.Rows(0).Item("IdSiglas")
+                    End If
+
+                    TxtCedTomo.Text = dt.Rows(0).Item("CedulaTomo")
+                    TxtCedAsi.Text = dt.Rows(0).Item("CedulaAsiento")
+
+
+                    ddlProvincias.Enabled = True
+                    ddlProvincias.SelectedValue = dt.Rows(0).Item("IdProvincia")
+                    ProvinciaActual.Text = ""
+                    ProvinciaActual.Text = dt.Rows(0).Item("IdProvincia")
+
+                    ddlDistrito.Enabled = True
+                    CargarCatalogoDistritos(dt.Rows(0).Item("IdProvincia"))
+                    ddlDistrito.SelectedValue = dt.Rows(0).Item("IdDistrito")
+
+                    ddlCorregimiento.Enabled = True
+                    CargarCatalogoCorregimientos(dt.Rows(0).Item("IdDistrito"))
+
+                    If dt.Rows(0).Item("IdCorregimiento") <> "-1" Then
+                        ddlCorregimiento.SelectedValue = dt.Rows(0).Item("IdCorregimiento")
+                    End If
+
+                    ddlEntidad.Enabled = True
+                    CargarCatalogoEntidades(dt.Rows(0).Item("IdProvincia"))
+                    ddlEntidad.SelectedValue = dt.Rows(0).Item("CodEntidad")
+
+                    ddlDependencia.Enabled = True
+                    CargarCatalogoDependencia(dt.Rows(0).Item("CodEntidad"))
+
+                    If dt.Rows(0).Item("CodDependencia") <> "-1" Then
+                        ddlDependencia.SelectedValue = dt.Rows(0).Item("CodDependencia")
+                    End If
+
+                    TxtCorreo.Text = dt.Rows(0).Item("BuzonCorreo")
+                    TxtTele.Text = PhoneFormater(dt.Rows(0).Item("Telefono"))
+                    TxtCelu.Text = PhoneFormater(dt.Rows(0).Item("Celular"), 8)
+                    ddlEstados.Enabled = True
+                    ddlEstados.SelectedValue = dt.Rows(0).Item("Estado")
+                    DivEstado.Visible = True
+
+                    If dt.Rows(0).Item("UsuarioRegistra") = "" Then
+                        UsuarioRegistra = ""
+                        FechaRegistro = ""
+                        divregistrado.Visible = False
+                    Else
+                        divregistrado.Visible = True
+                        CodigoSistema = ObjInterfacesJP.CodigoSistema()
+                        data = ObjInterfacesJP.BuscarNombreUsuarios(dt.Rows(0).Item("UsuarioRegistra"), CodigoSistema)
+                        UsuarioRegistra = data.Rows(0).Item("Nombre_P") + " " + data.Rows(0).Item("Apellido_P") + " "
+                        FechaRegistro = dt.Rows(0).Item("FechaRegistro")
+                    End If
+
+                    If dt.Rows(0).Item("UsuarioModifica") = "" Then
+                        UsuarioModifica = ""
+                        FechaModifica = ""
+                        divmodificado.Visible = False
+                    Else
+                        divmodificado.Visible = True
+                        data = ObjInterfacesJP.BuscarNombreUsuarios(dt.Rows(0).Item("UsuarioModifica"), CodigoSistema)
+                        UsuarioModifica = data.Rows(0).Item("Nombre_P") + " " + data.Rows(0).Item("Apellido_P") + " "
+                        FechaModifica = dt.Rows(0).Item("FechaModifica")
+                    End If
+
+                    notifyModal = "$('#MdlRegAuto').modal('show');"
+
+                Else
+                    'Dim dtMensaje As New DataTable
+                    dtMensaje = ObjInterfacesJP.ConsultarMensaje("EG1", "")
+                    Funciones.ModalAlertCodeBehind(dtMensaje.Rows(0).Item("Mensaje")) '"No se encontró el registro"
+                End If
+
+            End If
+
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+    End Sub
+
+
+    'Private Sub gvautoridades_RowDataBound(sender As Object, e As GridViewRowEventArgs) Handles gvautoridades.RowDataBound
+    '    If e.Row.RowType = DataControlRowType.DataRow Then
+    '        Dim index As Integer = e.Row.RowIndex
+    '        Dim lblUltimaModificacion As Label = e.Row.FindControl("DatosModificacion")
+    '        Dim lblUsuario As Label = e.Row.FindControl("user")
+
+    '        lblUsuario.Text = gvautoridades.DataKeys(index)("UsuarioModifica").ToString
+
+
+
+    '        If lblUsuario.Text <> "" Then
+    '            Dim CodigoSistema As New Integer
+    '            Dim Data As New DataTable
+
+    '            CodigoSistema = ObjInterfacesJP.CodigoSistema()
+    '            Data = ObjInterfacesJP.BuscarNombreUsuarios(lblUsuario.Text, CodigoSistema)
+
+    '            lblUltimaModificacion.Text = Data.Rows(0).Item("Nombre_P") + " " + Data.Rows(0).Item("Apellido_P") + " " + gvautoridades.DataKeys(index)("FechaModifica") + " "
+    '        End If
+
+    '    End If
+    'End Sub
+
+End Class
